@@ -8,39 +8,85 @@ extern WriteFile
 section .data ;variables
 ;DB automatically allocates space for variables
         newline: db 10
-        blah: db "aaaaaaaa",10,0
-        char: db "x",10,0
-        msg: db "Hello world!", 0 ;equ defines a byte (???)
-        len: equ $ - msg ; equ defines constant for compiler
-        digits: db "0123456789",0;
+        message: db "Hello World!";
 
-        currentDig: db 0;
+      ;  currentDig: db 0;
 
 section .text           ; code section.
 global main		; standard gcc entry point
 
-main:	
+main:
+push rbp
+mov rbp, rsp
+sub rsp, 10*16
+
+mov rdx, message
+call printADR_;
+
+mov rsp, rbp;
+pop rbp;
+ret
+
+test:
+        push rbp
+        mov rbp, rsp
+        sub rsp, 10*16
+
+        mov rbx, 0
+        touterloop:
+
+                mov r13, rsp
+                sub r13, msg
+                mov [r13], 'h'
+                mov rdx, msg
+                mov r8, 5
+                call printADR_
+
+        inc rbx
+        cmp rbx, 5
+        jl touterloop
+
+        mov rsp, rbp;
+        pop rbp;
+        ret
+
+zelensky:	
         push rbp
         mov rbp, rsp
         sub rsp, 10*16;
-                
 
-                mov rbx, 0;
-                loop:               
-                        inc rbx;
-                        mov [rbp-50], rbx
-                        mov rdx, rbp
-                        sub rdx, 50
-                        ;add rdx, rbx
+        mov r13,0
+        outerloop:
+               mov r14, msg;
+               add r14, r13
+                mov r15,[r14]
+                mov rbx, r15;
+                sub rbx, 10;
+        ;        add rbx, r14;
+            ;    sub rbx, 20
+                myloop:      
+                        inc rbx;       
+                        mov rdx, msg  
+                        mov r8, r13
+                        call printADR_;
+
+                        
+                        mov rdx, rbx
                         mov r8, 1
-                        call print_;
+                        call printVAL_;
+
+
+                        
+                        
                         call endl_
             
                 ;mov rcx, 'x';
-                cmp rbx, 'l'
-                jl loop
-                
+                cmp rbx, r15;
+                jl myloop
 
+        inc r13,
+        cmp r13, len
+        jl outerloop
 
                 ;call ExitProcess 
                 ;add rsp, 48; //return stack space      
@@ -62,7 +108,7 @@ endl_:
 
                 mov r8,1
                 mov rdx, newline
-                call print_
+                call printADR_
                         
         mov rsp, rbp;
         pop rbp;
@@ -71,7 +117,7 @@ endl_:
 
 ; RDX in: pointer to message 2 be written
 ; R8  in: number of char to write
-print_:
+printADR_:
         push rbp
         mov rbp, rsp
         sub rsp, 16*4;
@@ -94,5 +140,24 @@ print_:
         pop rbp;
         ret;
 ;
+
+printVAL_:
+        push rbp
+        mov rbp, rsp
+        sub rsp, 16*4;
+        push r13
+
+        
+        mov r13, [rdx]
+        mov rdx, r13
+
+        call printADR_
+
+        pop r13
+        mov rsp, rbp;
+        pop rbp;
+        ret;
+;
+
 
         
