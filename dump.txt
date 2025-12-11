@@ -1,0 +1,37 @@
+
+fill:
+        push rbp
+        mov rbp, rsp
+        sub rsp, 10*16
+
+mov rcx, 5
+mov rdx, 2
+mov r8, 5
+mov r9, 5
+mov rbx, 'h'
+        
+        mov r10, 0
+        mov r11, rcx
+        ol:
+        mov rdx, message
+        add rdx, r11
+        mov [rdx], rbx
+
+        add r11, width
+        inc r10
+        cmp r10, r9
+        jl ol
+
+        mov rsp, rbp;
+        pop rbp;
+ret
+
+
+mov r10, 0
+flooper:
+mov rdx, message
+add rdx, r10
+mov [rdx], 250
+inc r10
+cmp r10, tl
+jl flooper
