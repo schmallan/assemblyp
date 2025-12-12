@@ -1,47 +1,3 @@
-
-fill:
-        push rbp
-        mov rbp, rsp
-        sub rsp, 10*16
-
-mov rcx, 5
-mov rdx, 2
-mov r8, 5
-mov r9, 5
-mov rbx, 'h'
-        
-        mov r10, 0
-        mov r11, rcx
-        ol:
-        mov rdx, message
-        add rdx, r11
-        mov [rdx], rbx
-
-        add r11, width
-        inc r10
-        cmp r10, r9
-        jl ol
-
-        mov rsp, rbp;
-        pop rbp;
-ret
-
-
-mov r10, 0
-flooper:
-mov rdx, message
-add rdx, r10
-mov [rdx], 250
-inc r10
-cmp r10, tl
-jl flooper
-
-
-
-
-
-
-
 extern ExitProcess
 extern GetStdHandle
 extern WriteConsoleA
@@ -50,7 +6,7 @@ extern WriteFile
 section .data ;variables
 ;DB automatically allocates space for variables
         newline: db 10
-        msg: db "hello",0
+        msg: db "000000",0
         tp: db 'x'
     
 
@@ -63,39 +19,36 @@ push rbp
 mov rbp, rsp
 sub rsp, 10*16
 
-mov r12, 1
-
-mov r11, 99
-myloop:
-
-cmp r12, 0
-jz e
-dec r12,
-
-;divide eax by source, quotient in eax and remainder in rdx
-mov rax, r11
+mov rax, 233
+mov r13, 0
+nl:
 mov rdx, 0
-mov ebx, 10
-div ebx
-mov r11, rax
-mov r10, rdx
+mov rbx, 10
+div rbx
+push rdx
+inc r13
+cmp rax,0
+jnz nl
 
-
-mov rdx, tp
+pl:
+pop r11
+mov rdx, msg
 mov [rdx], '0'
-add [rdx], r10
+add [rdx], r11
 mov r8, 1
 call print_
+dec r13
+cmp r13,0
+jg pl
 
-
-cmp r11, 0
-jg myloop
-
-e:
-mov rax, r11
+mov rax, r12
 mov rsp, rbp;
 pop rbp;
 ret
+
+
+                  
+
 
 print_:
         push rbp
@@ -120,19 +73,3 @@ print_:
         pop rbp;
         ret;
 ;
-
-
-mov r13, 0
-mov r14, 0
-mov rdx, tp
-call ptoGrid
-
-mov rdx, message
-mov r8, tl
-call print_
-;call printg_
-
-mov rax, 8 
-mov rsp, rbp;
-pop rbp;
-ret

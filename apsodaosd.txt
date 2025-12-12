@@ -1,0 +1,28 @@
+
+mov r12, 1
+
+mov r11, 8
+myloop:
+
+cmp r12, 0
+jz e
+dec r12,
+
+;divide eax by source, quotient in eax and remainder in rdx
+mov rax, r11
+mov rdx, 0
+mov ebx, 2
+div ebx
+mov r11, rax
+mov r10, rdx
+
+mov rdx, tp
+mov [rdx], '0'
+add [rdx], r10
+mov r8, 1
+call print_
+
+cmp r11, 0
+jg myloop
+
+e:
