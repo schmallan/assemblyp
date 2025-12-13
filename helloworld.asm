@@ -61,7 +61,7 @@ main:
 
         call drawcanv
         
-        call clearGrid
+        ;call clearGrid
 
         mov r14, 0
         SupaLoop:
@@ -204,7 +204,7 @@ clearGrid:
         cgo:
                 mov rdx, grid
                 add rdx, rax
-                mov [rdx], 128
+                mov [rdx], 0
         inc rax
         cmp rax, playTl
         jl cgo
@@ -224,10 +224,9 @@ drawgrid:
                         call calcAdrG
 
                         mov r15, [r14]
-                        cmp r15, 128
-                        mov [r14], '0'
-                        jl skip
-                        ;mov r15, 'n'
+                        cmp r15b, 48
+                        jz skip
+                        mov r15, 'n'
                         skip:
                         
                         mov r13, rbx
