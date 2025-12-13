@@ -9,6 +9,15 @@ section .data ;variables
         newline: db 10
         speed: equ  300000000
 
+        blockL: equ 1570
+        blockJ: equ 802
+        blockS: equ 112
+        blockZ: equ 1584
+        blockT: equ 624
+        blockI: equ 240
+        blockO: equ 1632
+        
+
       ;  49*3*10^10 cycles / 156
         tp: db "xxxxxxxxxxxxxxx"
         m: db 0
@@ -25,7 +34,7 @@ section .data ;variables
         title: db "TETRIS",0
         tl: equ width*height
         colors: db ' ',176,177,178,0
-        grid: db "a000000000b000000000c000000000d000000000e000000000f000000000g000000000h000000000i000000000j000000000a000000000b000000000c000000000d000000000e000000000f000000000g000000000h000000000i000000000j000000000!!!!!!!!!!!!!!!!!!!!!!!!",
+        grid: db "a000000000b000000000c000000000d000000000e000000000f000000000g000000000h000000000i000000000j000000000k000000000l000000000m000000000n000000000o000000000p000000000q000000000r000000000s000000000t000000000!!!!!!!!!!!!!!!!!!!!!!!!",
         message: db "segfault more like schmegfault";
 
       ;  currentDig: db 0;
@@ -33,26 +42,11 @@ section .data ;variables
 section .text           ; code section.
 global main		; standard gcc entry point
 
+;ascii reference
 ;250 ·
 ;176 ░
 ;177 ▒
 ;178 ▓ 
-
-cwait:
-        push rbp
-        mov rbp, rsp
-        sub rsp, 4*16
-
-        mov r13, speed
-        mov r12, 0
-        count:
-        inc r12
-        cmp r12, r13
-        jl count
-
-        mov rsp, rbp;
-        pop rbp;
-ret
 
 main:
         push rbp
@@ -61,7 +55,7 @@ main:
 
         call drawcanv
         
-        ;call clearGrid
+        call clearGrid
 
         mov r14, 0
         SupaLoop:
@@ -170,12 +164,12 @@ drawcanv:
                 mov rbx, 10
                 call fill
 
-                mov rcx, 0
+                mov rcx, 0 ;cls
                 mov rdx, 0
                 mov r8, width
                 mov r10, 1
                 mov rbx, 10
-                call fill
+               ; call fill
 
                 mov r13, 1
                 mov r14, 1
@@ -184,6 +178,112 @@ drawcanv:
 
 ret
 
+cwait:
+        push rbp
+        mov rbp, rsp
+        sub rsp, 4*16
+
+        mov r13, speed
+        mov r12, 0
+        count:
+        inc r12
+        cmp r12, r13
+        jl count
+
+        mov rsp, rbp;
+        pop rbp;
+ret
+
+;r13 r14 xy in, rdx block in
+drawblock:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 64*16
+       ; mov rdx, 65535
+        mov r15, 3
+        dbin:
+                mov r12, 3
+                dbout:
+                        mov rax, rdx
+                        call popLS
+
+                        cmp dl, 0
+                        jz dbe
+                                mov r13, r12
+                                mov r14, r15
+                                call calcAdrG
+                                mov [r14], 178
+                        dbe:
+                        mov rdx, rax
+                dec r12
+                cmp r12, 0
+                jnl dbout
+        dec r15
+        cmp r15, 0
+        jnl dbin
+
+
+
+    mov rsp, rbp;
+    pop rbp;
+ret
+
+;pops the least significant bit
+;rax in
+;rdx out
+popLS:
+        mov rdx, 0
+        mov rcx, 2
+        div rcx
+ret
+
+
+body:
+        mov rdx, blockT
+        call drawblock
+        
+        call drawgrid
+
+
+
+        ;print grid
+        mov rdx, message
+        mov r8, tl
+        call print_
+        ;call printg_
+
+        
+        mov rcx, 999
+        call printNum
+        mov r13, tp
+        call printTz
+
+ret
+
+;r13 in
+printTz:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 10*16
+    push r13
+    mov r15,0
+        tzl:
+                mov r14b, [r13]
+                inc r15
+                inc r13
+                cmp r14b, 0
+                jz tze
+
+                ;call endl_
+        jmp tzl
+
+        tze:
+        pop rdx
+        mov r8, r15
+        call print_
+    mov rsp, rbp;
+    pop rbp;
+ret
 ;r13 r14 in, r14 out
 calcAdrG:
                         ml2:
@@ -224,9 +324,9 @@ drawgrid:
                         call calcAdrG
 
                         mov r15, [r14]
-                        cmp r15b, 48
-                        jz skip
-                        mov r15, 'n'
+                        cmp r15b, 0
+                        jnz skip
+                        mov r15, ' '
                         skip:
                         
                         mov r13, rbx
@@ -250,17 +350,6 @@ drawgrid:
         
         mov rsp, rbp;
         pop rbp;
-ret
-
-body:
-        
-        call drawgrid
-
-        ;print grid
-        mov rdx, message
-        mov r8, tl
-        call print_
-        ;call printg_
 ret
 
 ;rcx in - startx
@@ -328,7 +417,7 @@ ptoGrid:
   jmp tzLoop
   esc:
 
- ret
+ret
 
 ;r13 x
 ;r14 y
@@ -443,7 +532,6 @@ printNum:
         add rdx,r14
         mov [rdx], 0
 
-        mov rax, r12
         mov rsp, rbp;
         pop rbp;
 ret
