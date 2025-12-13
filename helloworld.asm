@@ -2,6 +2,7 @@ extern ExitProcess
 extern GetStdHandle
 extern WriteConsoleA
 extern WriteFile
+extern GetAsyncKeyState
 
 section .data ;variables
 ;DB automatically allocates space for variables
@@ -9,17 +10,23 @@ section .data ;variables
         speed: equ  300000000
 
       ;  49*3*10^10 cycles / 156
-        tp: db "xxxxxxx"
+        tp: db "xxxxxxxxxxxxxxx"
         m: db 0
+        pcx: dq 3
+        pcy: dq 3
+        space: equ 32
         width: equ 40
         height: equ 30
-        playW: equ 20
+        playW: equ 10
         playH: equ 20
+        playTl: equ playW*playH
         playX: equ 3
         playY: equ 4
         title: db "TETRIS",0
         tl: equ width*height
-        message: db "sybau";
+        colors: db ' ',176,177,178,0
+        grid: db "a000000000b000000000c000000000d000000000e000000000f000000000g000000000h000000000i000000000j000000000a000000000b000000000c000000000d000000000e000000000f000000000g000000000h000000000i000000000j000000000!!!!!!!!!!!!!!!!!!!!!!!!",
+        message: db "segfault more like schmegfault";
 
       ;  currentDig: db 0;
 
@@ -48,34 +55,40 @@ cwait:
 ret
 
 main:
-push rbp
-mov rbp, rsp
-sub rsp, 10*16
-
-mov r14, 0
-SupaLoop:
-
-call cwait
-inc r14
-
-push r14
-call body
-pop r14
-
-jmp SupaLoop
-
-mov rax, 8 
-mov rsp, rbp;
-pop rbp;
-ret
-
-body:
         push rbp
         mov rbp, rsp
-        sub rsp, 10*16
+        sub rsp, 256*16
+
+        call drawcanv
+        
+        call clearGrid
+
+        mov r14, 0
+        SupaLoop:
+
+        call cwait
+        inc r14
+
         push r14
-        ;fill canvas
-                
+        call body
+        pop r14
+
+        mov rcx, 'X'
+        call GetAsyncKeyState
+        cmp al, 0
+        jnz quit
+
+     ;   jmp SupaLoop
+
+
+        quit:
+        mov rax, 8 
+        mov rsp, rbp;
+        pop rbp;
+ret
+
+drawcanv:
+
                 mov rcx, 0 ;bg
                 mov rdx, 0
                 mov r8, width
@@ -86,6 +99,7 @@ body:
                 mov rcx, playX ;playarea
                 mov rdx, playY
                 mov r8, playW
+                add r8, r8
                 mov r10, playH
                 mov rbx, ' '
                 call fill
@@ -97,8 +111,9 @@ body:
                 mov r10, playH
                 mov rbx, 186
                 call fill
-                mov rcx, playX ;rightwall
-                add rcx, playW
+                mov rcx, playW ;rightwall
+                add rcx, rcx
+                add rcx, playX
                 mov rdx, playY
                 mov r8, 1
                 mov r10, playH
@@ -109,6 +124,7 @@ body:
                 mov rdx, playY
                 dec rdx
                 mov r8, playW
+                add r8, r8
                 mov r10, 1
                 mov rbx, 196
                 call fill
@@ -118,8 +134,9 @@ body:
                 dec r14
                 mov r15, 214
                 call setpx
-                mov r13, playX ;upright
-                add r13, playW
+                mov r13, playW
+                add r13, r13
+                add r13, playX ;upright
                 mov r14, playY
                 dec r14
                 mov r15, 183
@@ -137,8 +154,9 @@ body:
                 add r14, playH
                 mov r15, 211
                 call setpx
-                mov r13, playX ;downright
-                add r13, playW
+                mov r13, playW
+                add r13, r13
+                add r13, playX ;upright
                 mov r14, playY
                 add r14, playH
                 mov r15, 189
@@ -164,25 +182,86 @@ body:
                 mov rdx, title
                 call ptoGrid
 
-        
-        ;
-        
-        pop rcx
-        call printNum
+ret
 
-        mov r13, 0
-        mov r14, 1
-        mov rdx, tp
-        call ptoGrid
+;r13 r14 in, r14 out
+calcAdrG:
+                        ml2:
+                        cmp r14, 0
+                        jz eg
+                        add r13, playW
+                        dec r14
+                        jmp ml2
+                        eg:
+                        mov r14, grid
+                        inc r14
+                        add r14, r13     
+                        dec r14
+ret
 
+clearGrid:
+        mov rax, 0
+        cgo:
+                mov rdx, grid
+                add rdx, rax
+                mov [rdx], 128
+        inc rax
+        cmp rax, playTl
+        jl cgo
+ret
+
+drawgrid:
+        push rbp
+        mov rbp, rsp
+        sub rsp, 256*16
+
+        mov rax, 0
+        drL:
+                mov rbx, 0
+                driL:
+                        mov r13, rbx
+                        mov r14, rax
+                        call calcAdrG
+
+                        mov r15, [r14]
+                        cmp r15, 128
+                        mov [r14], '0'
+                        jl skip
+                        ;mov r15, 'n'
+                        skip:
+                        
+                        mov r13, rbx
+                        add r13, r13
+                        add r13, playX
+                        mov r14, rax
+                        add r14, playY
+                        call calcAdr
+                        mov [r13], r15b
+                        inc r13
+                        mov [r13], r15b ;place two consequtive blocks
+
+                inc rbx
+                cmp rbx, playW
+                jl driL
+
+
+        inc rax
+        cmp rax, playH
+        jl drL
+        
+        mov rsp, rbp;
+        pop rbp;
+ret
+
+body:
+        
+        call drawgrid
+
+        ;print grid
         mov rdx, message
         mov r8, tl
         call print_
         ;call printg_
-
-        mov rax, 8 
-        mov rsp, rbp;
-        pop rbp;
 ret
 
 ;rcx in - startx
@@ -191,9 +270,6 @@ ret
 ;r10 in - height
 ;rbx in - tofill
 fill:
-        push rbp
-        mov rbp, rsp
-        sub rsp, 10*16
 
 
         mov r13, r10
@@ -228,28 +304,16 @@ fill:
         jl ol
 
 
-        mov rsp, rbp;
-        pop rbp;
 ret
 
 setpx:
-  push rbp
-  mov rbp, rsp
-  sub rsp, 16*4;
-
   call calcAdr
   mov [r13], r15b
-  
-  mov rsp, rbp
-  pop rbp
 ret
 
 ;r13, r14 x and y
 ;rdx zero terminated string
 ptoGrid:
-  push rbp
-  mov rbp, rsp
-  sub rsp, 16*4;
   push rdx
   call calcAdr
   pop rdx
@@ -265,18 +329,12 @@ ptoGrid:
   jmp tzLoop
   esc:
 
-  mov rsp, rbp
-  pop rbp
  ret
 
 ;r13 x
 ;r14 y
 ;r13 out
 calcAdr:
-  push rbp
-  mov rbp, rsp
-  sub rsp, 16*4;
-
   mloop:
   cmp r14, 0
   jz ae
@@ -290,8 +348,6 @@ calcAdr:
   mov rdx, message
   add r13, rdx
 
-  mov rsp, rbp
-  pop rbp
  ret
 
 
