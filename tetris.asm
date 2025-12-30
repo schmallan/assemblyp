@@ -12,11 +12,13 @@ section .data
     printT: equ printW*printH
     printGrid: db printT dup '?';
 
+    numPieces: equ 7
+
     cursorX: dq 5
     cursorY: dq 3
 
-    well: dq 0
-    bagLeft: db 7
+    well: dq 4
+    bagLeft: db numPieces
 
     playX: equ 4
     playY: equ 4
@@ -376,7 +378,6 @@ flipCW:
     call flipI
 ret
 
-
 checkCollision: ;al out
     push r12
     mov r12, 0
@@ -490,7 +491,6 @@ clearPlayGrid:
 
 ret
 
-
 randInt: ;rbx max (randint 0, n noninclusive)  rdx out
     mov rdx, well
     mov rax, [rdx]
@@ -498,15 +498,66 @@ randInt: ;rbx max (randint 0, n noninclusive)  rdx out
     div rbx
 ret
 
-
 bagRandomize:
-    mov rbx, 7
+    mov rdx, bagLeft
+    mov rbx, 0
+    mov bl, [rdx]
+    dec bl ;dec bagLeft
+        ;if neg
+        cmp bl, 0
+        jnl brr
+            call resetBag
+        brr:
+        mov [rdx], bl
+    inc bl
     call randInt
+
+    mov rax, -1
+
+    brL:
+        
+        inc rax
+
+        mov rbx, bag
+        add rbx, rax
+        mov bl, [rbx]
+
+        cmp bl, 'X'
+        jz brs
+            dec rdx
+        brs:
+
+        cmp rdx, 0
+    jnl brL
+    brE:
+
+
     mov rcx, bag
-    add rcx, rdx
+    add rcx, rax
     mov [rcx], 'X'
 
-    mov rax, rdx
+    ;raxout
+ret
+
+resetBag:
+    mov rdx, bagLeft
+    mov [rdx], numPieces-1
+
+    mov rdx, bag
+    mov rax, 0
+
+    rbl:
+    mov [rdx], rax
+    add [rdx], '0'
+    inc rdx
+    inc rax
+    cmp rax, numPieces
+    jl rbl
+
+    
+    mov rdx, bagLeft
+    mov rbx, 0
+    mov bl, [rdx]
 ret
 
 addWell: ;rax in toadd
