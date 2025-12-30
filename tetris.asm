@@ -15,7 +15,8 @@ section .data
     cursorX: dq 5
     cursorY: dq 3
 
-    well: dq 222
+    well: dq 0
+    bagLeft: db 7
 
     playX: equ 4
     playY: equ 4
@@ -68,10 +69,7 @@ main:
     mov rbp, rsp
     sub rsp, 10*16
 
-    mov rax, currentPiece
-    mov rax, [rax]
-    call loadPiece
-
+    call resetBlock 
 
     ;mov rcx, cyclecount
     ;mov [rcx], 0
@@ -240,7 +238,6 @@ flipI:
     jg fio
     
 ret
-
 
 flipZ:
 
@@ -446,9 +443,10 @@ ret
 
 resetBlock:
 
-    mov rbx, currentPiece
+    ;mov rbx, currentPiece
     call bagRandomize
-    mov [rbx], al
+    ;mov [rbx], al
+    ;mov rax, 3
     call loadPiece
 
     call modColor
@@ -492,18 +490,23 @@ clearPlayGrid:
 
 ret
 
-bagRandomize:
+
+randInt: ;rbx max (randint 0, n noninclusive)  rdx out
     mov rdx, well
     mov rax, [rdx]
     mov rdx, 0
-    mov rbx, 7
     div rbx
-    mov rcx, rdx
-    push rdx
-    ;call int2String
-    ;mov rdx, printBuffer
-    pop rax
+ret
 
+
+bagRandomize:
+    mov rbx, 7
+    call randInt
+    mov rcx, bag
+    add rcx, rdx
+    mov [rcx], 'X'
+
+    mov rax, rdx
 ret
 
 addWell: ;rax in toadd
@@ -535,22 +538,19 @@ body:
 
     call drawcanv
     
-   ; mov rcx, well
-   ; mov rcx, [rcx]
-   ; call int2String
     mov rax, 2
-    mov rbx, 2
-    mov rdx, printBuffer
+    mov rbx, 25
+    mov rdx, bag
     call printCanv
     
-   ; call checkCollision
-    
-  ;  mov rcx, 0
-   ; call int2String
-    ;mov rax, 2
-    ;mov rbx, 26
-    ;mov rdx, printBuffer
-    ; call printCanv
+    mov rdx, bagLeft
+    mov rcx, 0
+    mov cl, [rdx]
+    call int2String
+    mov rax, 2
+    mov rbx, 26
+    mov rdx, printBuffer
+    call printCanv
 
     call drawPlayGrid
 
